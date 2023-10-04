@@ -1,13 +1,13 @@
 package com.backend.ecommerce.service;
 
 import com.backend.ecommerce.exception.RefreshTokenException;
+import com.backend.ecommerce.model.LocalUser;
 import com.backend.ecommerce.model.RefreshToken;
 import com.backend.ecommerce.model.repository.RefreshTokenRepo;
 import com.backend.ecommerce.model.repository.UserRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.Optional;
@@ -29,6 +29,13 @@ public class RefreshTokenService {
     }
 
     public RefreshToken generateRefreshToken(String email){
+        LocalUser user = userRepo.findByEmailIgnoreCase(email).get();
+        if(refreshTokenRepo.findByUser(user).isPresent()){
+            //RefreshToken refreshToken = refreshTokenRepo.findByUser(user).get();
+            //refreshTokenRepo.delete(refreshToken);
+            refreshTokenRepo.deleteByUser(user);
+        }
+
         RefreshToken refreshToken = new RefreshToken();
 
         refreshToken.setUser(userRepo.findByEmailIgnoreCase(email).get());
@@ -49,8 +56,4 @@ public class RefreshTokenService {
         return token;
     }
 
-    @Transactional
-    public int deleteByUserEmail(String email){
-        return refreshTokenRepo.deleteByUser(userRepo.findByEmailIgnoreCase(email).get());
-    }
 }

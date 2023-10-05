@@ -50,6 +50,13 @@ public class JWTService {
         return getCookieValueByName(request, jwtRefreshCookie);
     }
 
+    public ResponseCookie getCleanJwtCookie(){
+        return ResponseCookie.from(jwtCookie, null).path("/").build();
+    }
+
+    public ResponseCookie getCleanRefreshCookie(){
+        return ResponseCookie.from(jwtRefreshCookie, null).path("/").build();
+    }
 
     private String getCookieValueByName(HttpServletRequest request, String name) {
         Cookie cookie = WebUtils.getCookie(request, name);
@@ -66,6 +73,7 @@ public class JWTService {
                 .path(path)
                 .maxAge(JWT_REFRESH_EXPIRATION_DATE / 1000)
                 .httpOnly(true)
+                .secure(true)
                 .build();
     }
 

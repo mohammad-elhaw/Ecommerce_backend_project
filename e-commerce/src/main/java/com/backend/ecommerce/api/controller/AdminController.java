@@ -2,10 +2,8 @@ package com.backend.ecommerce.api.controller;
 
 
 import com.backend.ecommerce.api.dto.LoginRequest;
-import com.backend.ecommerce.api.dto.LoginResponse;
-import com.backend.ecommerce.api.dto.RegisterRequest;
-import com.backend.ecommerce.exception.UserAlreadyExistsException;
-import com.backend.ecommerce.model.LocalUser;
+import com.backend.ecommerce.api.dto.ErrorMessage;
+import com.backend.ecommerce.exception.InvalidEmailOrPasswordException;
 import com.backend.ecommerce.service.interfaces.IAdminService;
 import com.backend.ecommerce.service.interfaces.IUserService;
 import jakarta.validation.Valid;
@@ -17,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.security.auth.login.CredentialException;
+import java.util.Date;
 
 @RestController
 @RequestMapping("/admin")
@@ -40,11 +38,17 @@ public class AdminController {
 //    }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> loginAdmin(@Valid @RequestBody LoginRequest loginRequest){
+    public ResponseEntity<?> loginAdmin(@Valid @RequestBody LoginRequest loginRequest){
         try{
             return userService.loginUser(loginRequest);
-        } catch (CredentialException e) {
-            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        } catch (InvalidEmailOrPasswordException e) {
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body(new ErrorMessage(
+                            HttpStatus.UNAUTHORIZED.value(),
+                            new Date(),
+                            e.getMessage()
+                    ));
         }
     }
 }

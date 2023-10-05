@@ -33,7 +33,7 @@ public class WebSecurityConfig {
                         .requestMatchers("/products/**", "/contact", "/admin/login", "/auth/verifyEmail", "auth/refreshToken", "/auth/register", "/auth/login", "/error").permitAll()
                         .requestMatchers("/admin/products/**", "/admin/orders/**", "/admin/**").hasRole("ADMIN")
                         .requestMatchers("/cart/**", "/users/**", "cart_items/**", "/orders/**", "/ratings/**")
-                        .hasAnyRole("USER", "ADMIN"))
+                        .hasAnyRole("USER", "ADMIN").anyRequest().authenticated())
                 .formLogin(Customizer.withDefaults())
                 .httpBasic(Customizer.withDefaults());
 

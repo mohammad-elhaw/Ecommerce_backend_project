@@ -1,9 +1,11 @@
 package com.backend.ecommerce.service;
 
+import com.backend.ecommerce.exception.EmailTimeOutException;
 import com.backend.ecommerce.model.LocalUser;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
+import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -16,7 +18,7 @@ public class EmailService {
 
     private final JavaMailSender mailSender;
 
-    public void sendEmail(String url, LocalUser user) throws MessagingException, UnsupportedEncodingException {
+    public void sendEmail(String url, LocalUser user) throws MessagingException, UnsupportedEncodingException, EmailTimeOutException {
         String subject = "Email Verification";
         String senderName = "User Registration Portal Service";
         String mailContent = "<p> Hi, " + user.getFirstName()+ ", </p>" +
@@ -30,6 +32,11 @@ public class EmailService {
         messageHelper.setTo(user.getEmail());
         messageHelper.setSubject(subject);
         messageHelper.setText(mailContent, true);
-        mailSender.send(message);
+        try{
+            mailSender.send(message);
+        }catch (MailException e){
+            throw new EmailTimeOutException("Some thing wrong happen when sending email try again later.");
+        }
+
     }
 }

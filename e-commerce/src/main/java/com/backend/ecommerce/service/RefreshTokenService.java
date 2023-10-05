@@ -31,9 +31,7 @@ public class RefreshTokenService {
     public RefreshToken generateRefreshToken(String email){
         LocalUser user = userRepo.findByEmailIgnoreCase(email).get();
         if(refreshTokenRepo.findByUser(user).isPresent()){
-            //RefreshToken refreshToken = refreshTokenRepo.findByUser(user).get();
-            //refreshTokenRepo.delete(refreshToken);
-            refreshTokenRepo.deleteByUser(user);
+            deleteByUser(user);
         }
 
         RefreshToken refreshToken = new RefreshToken();
@@ -45,15 +43,19 @@ public class RefreshTokenService {
         return refreshToken;
     }
 
-    public RefreshToken verifyExpiration(RefreshToken token) throws RefreshTokenException {
-        RefreshToken refreshToken = refreshTokenRepo.findByRefreshToken(token.getRefreshToken())
-                .orElseThrow(()->new RefreshTokenException(token.getRefreshToken(), "Given refresh token doesn't exists in database"));
+    public RefreshToken verifyExpiration(String token) throws RefreshTokenException {
+        RefreshToken refreshToken = refreshTokenRepo.findByRefreshToken(token)
+                .orElseThrow(()->new RefreshTokenException(" Given refresh token doesn't exists in database"));
 
-        if(token.getExpiryDate().compareTo(Instant.now()) < 0){
-            refreshTokenRepo.delete(token);
-            throw new RefreshTokenException(token.getRefreshToken(), "Refresh token was expired. Please make a new login request");
+        if(refreshToken.getExpiryDate().compareTo(Instant.now()) < 0){
+            refreshTokenRepo.delete(refreshToken);
+            throw new RefreshTokenException("Refresh token was expired. Please make a new login request");
         }
-        return token;
+        return refreshToken;
+    }
+
+    public void deleteByUser(LocalUser user){
+        refreshTokenRepo.deleteByUser(user);
     }
 
 }

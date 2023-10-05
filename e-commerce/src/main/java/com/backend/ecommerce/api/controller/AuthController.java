@@ -1,14 +1,15 @@
 package com.backend.ecommerce.api.controller;
 
 import com.backend.ecommerce.api.dto.LoginRequest;
-import com.backend.ecommerce.api.dto.LoginResponse;
 import com.backend.ecommerce.api.dto.RegisterRequest;
 import com.backend.ecommerce.event.RegistrationCompleteEvent;
+import com.backend.ecommerce.api.dto.ErrorMessage;
+import com.backend.ecommerce.exception.InvalidEmailOrPasswordException;
 import com.backend.ecommerce.exception.RefreshTokenException;
 import com.backend.ecommerce.exception.UserAlreadyExistsException;
 import com.backend.ecommerce.model.LocalUser;
-import com.backend.ecommerce.model.RefreshToken;
 import com.backend.ecommerce.service.JWTService;
+import com.backend.ecommerce.service.MyCustomUserDetails;
 import com.backend.ecommerce.service.RefreshTokenService;
 import com.backend.ecommerce.service.interfaces.IUserService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,9 +20,10 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import javax.security.auth.login.CredentialException;
+import java.util.Date;
 
 @RestController
 @RequestMapping("/auth")
@@ -41,7 +43,13 @@ public class AuthController {
             publisher.publishEvent(new RegistrationCompleteEvent(user, applicationUrl(request)));
             return new ResponseEntity<>(HttpStatus.OK);
         } catch (UserAlreadyExistsException e) {
-            return new ResponseEntity(HttpStatus.CONFLICT);
+            return ResponseEntity
+                    .status(HttpStatus.CONFLICT)
+                    .body(new ErrorMessage(
+                            HttpStatus.CONFLICT.value(),
+                            new Date(),
+                            "The Email is Already Exists"
+                    ));
         }
     }
 
@@ -55,38 +63,44 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest loginRequest){
+    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest){
         try{
             return userService.loginUser(loginRequest);
-        } catch (CredentialException e) {
-            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        } catch (InvalidEmailOrPasswordException e) {
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body(new ErrorMessage(
+                            HttpStatus.UNAUTHORIZED.value(),
+                            new Date(),
+                            e.getMessage()
+                    ));
         }
     }
 
+    @GetMapping("/test")
+    public ResponseEntity test(){
+        return ResponseEntity.ok().body("hello man");
+    }
+
     @PostMapping("/refreshToken")
-    public ResponseEntity refreshToken(HttpServletRequest request){
-        String refreshToken = jwtService.getJwtRefreshFromCookie(request);
+    public ResponseEntity refreshToken(HttpServletRequest request) throws RefreshTokenException {
+        return userService.refreshToken(request);
+    }
 
-        if(refreshToken != null){
-            try{
-                RefreshToken token = refreshTokenService.findByToken(refreshToken).get();
-                refreshTokenService.verifyExpiration(token);
-            } catch (RefreshTokenException e) {
-                return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-            }
+    @PostMapping("/logout")
+    public ResponseEntity logout(){
+        Object principle = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
-
-            return refreshTokenService.findByToken(refreshToken)
-                    .map(RefreshToken::getUser)
-                    .map(localUser -> {
-                        ResponseCookie jwtCookie = jwtService.generateJwtCookie(localUser);
-
-                        return ResponseEntity.ok()
-                                .header(HttpHeaders.SET_COOKIE, jwtCookie.toString())
-                                .body("Token is refreshed successfully.");
-
-                    }).get();
+        if(!principle.toString().equals("anonymousUser")){
+            LocalUser user = ((MyCustomUserDetails)principle).getUser();
+            refreshTokenService.deleteByUser(user);
         }
-        return ResponseEntity.badRequest().body("Refreshed token is empty");
+        ResponseCookie jwtCookie = jwtService.getCleanJwtCookie();
+        ResponseCookie jwtRefreshCookie = jwtService.getCleanRefreshCookie();
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, jwtCookie.toString())
+                .header(HttpHeaders.SET_COOKIE, jwtRefreshCookie.toString())
+                .body("You 've been sign out successfully!");
     }
 }

@@ -5,13 +5,11 @@ import com.backend.ecommerce.model.LocalUser;
 import com.backend.ecommerce.service.EmailService;
 import com.backend.ecommerce.service.JWTService;
 import com.backend.ecommerce.service.interfaces.IUserService;
-import jakarta.mail.MessagingException;
 import lombok.AllArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
-
-import java.io.UnsupportedEncodingException;
 
 @Slf4j
 @Component
@@ -23,6 +21,7 @@ public class RegistrationCompleteEventListener implements ApplicationListener<Re
     private IUserService userService;
     private EmailService emailService;
 
+    @SneakyThrows
     @Override
     public void onApplicationEvent(RegistrationCompleteEvent event) {
         // 1. Get the newly registered user
@@ -36,10 +35,6 @@ public class RegistrationCompleteEventListener implements ApplicationListener<Re
         String url = event.getApplicationUrl() + "/auth/verifyEmail?token=" + verificationToken;
         // 5. send the email
         log.info("Click the link to verify your registration :{} ", url);
-        try{
             emailService.sendEmail(url, user);
-        } catch (UnsupportedEncodingException | MessagingException e) {
-            throw new RuntimeException(e);
-        }
     }
 }

@@ -12,26 +12,25 @@ import lombok.Setter;
 @Setter
 public class RegisterRequest {
 
-    @NotBlank
-    @NotNull
-    @Email
+    @NotBlank(message = "Email should not be empty")
+    @NotNull(message = "Email should not be null")
+    @Email(message = "Invalid Email")
     private String email;
-    @NotBlank
-    @NotNull
-    @Size(max = 10, min = 3)
+    @NotBlank(message = "first name should not be empty")
+    @NotNull(message = "first name should not be null")
+    @Size(max = 10, min = 3, message = "Invalid Name: Must be consist of 3 - 10 character")
     private String firstName;
-    @NotBlank
-    @NotNull
-    @Size(max = 10, min = 3)
+    @NotBlank(message = "Last name should not be empty")
+    @NotNull(message = "Last name should not be null")
+    @Size(max = 10, min = 3, message = "Invalid Name: Must be consist of 3 - 10 character" )
     private String lastName;
-
-    @NotNull
-    @NotBlank
+    @NotNull(message = "phone number should not be null")
+    @NotBlank(message = "phone number should not be empty")
     private String phoneNumber;
-
-    @NotBlank
-    @NotNull
-    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[#$@!%&*?])[A-Za-z\\d#$@!%&*?]{8,}$")
+    @NotBlank(message = "password should not be null")
+    @NotNull(message = "password should not be null")
+    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[#$@!%&*?])[A-Za-z\\d#$@!%&*?]{8,}$"
+            , message = "Password must have minimum eight characters, at least one letter, one number and one special character:")
     private String password;
 
 }

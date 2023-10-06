@@ -26,13 +26,16 @@ public class RegistrationCompleteEventListener implements ApplicationListener<Re
     public void onApplicationEvent(RegistrationCompleteEvent event) {
         // 1. Get the newly registered user
         LocalUser user = event.getUser();
+
         // 2. Create Verification Token for the user
         String verificationToken = jwtService.generateToken(user);
+
         // 3. Save the Verification Token for the user
         userService.saveEmailToken(user, verificationToken);
 
         // 4. build the verification url to be sent to the user
         String url = event.getApplicationUrl() + "/auth/verifyEmail?token=" + verificationToken;
+
         // 5. send the email
         log.info("Click the link to verify your registration :{} ", url);
             emailService.sendEmail(url, user);

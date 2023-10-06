@@ -1,6 +1,8 @@
 package com.backend.ecommerce.service;
 
+import com.backend.ecommerce.model.AccessToken;
 import com.backend.ecommerce.model.LocalUser;
+import com.backend.ecommerce.model.repository.AccessTokenRepo;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -15,6 +17,7 @@ import org.springframework.web.util.WebUtils;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
+import java.util.Optional;
 
 @Service
 public class JWTService {
@@ -30,12 +33,15 @@ public class JWTService {
     @Value("${jwt.refresh-token.expiration}")
     private Long JWT_REFRESH_EXPIRATION_DATE;
 
+    private AccessTokenRepo accessTokenRepo;
+
+    public JWTService(AccessTokenRepo accessTokenRepo) {
+        this.accessTokenRepo = accessTokenRepo;
+    }
 
 
-
-    public ResponseCookie generateJwtCookie(LocalUser user){
-        String jwt = generateToken(user);
-        return generateCookie(jwtCookie, jwt, "/");
+    public ResponseCookie generateJwtCookie(String accessToken){
+        return generateCookie(jwtCookie, accessToken, "/");
     }
 
     public ResponseCookie generateJwtRefreshCookie(String refreshToken){
@@ -98,6 +104,8 @@ public class JWTService {
     }
 
     public boolean validateToken(String token){
+        Optional<AccessToken> accessToken = accessTokenRepo.findByAccessToken(token);
+        if(accessToken.isEmpty()) return false;
         try{
             Jwts
                     .parserBuilder()

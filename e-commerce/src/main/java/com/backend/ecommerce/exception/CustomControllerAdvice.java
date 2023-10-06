@@ -1,7 +1,6 @@
 package com.backend.ecommerce.exception;
 
 import com.backend.ecommerce.api.dto.ErrorMessage;
-import org.hibernate.TypeMismatchException;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;

@@ -8,6 +8,7 @@ com\backend\ecommerce\service\interfaces\IUserService.class
 com\backend\ecommerce\service\JWTService.class
 com\backend\ecommerce\api\controller\AdminController.class
 com\backend\ecommerce\api\dto\ErrorMessage.class
+com\backend\ecommerce\exception\UserIsNotEnableException.class
 com\backend\ecommerce\service\RefreshTokenService.class
 com\backend\ecommerce\model\Category.class
 com\backend\ecommerce\event\listener\RegistrationCompleteEventListener.class
@@ -15,6 +16,7 @@ com\backend\ecommerce\api\config\SetupDataLoader.class
 com\backend\ecommerce\model\Privilege.class
 com\backend\ecommerce\api\dto\SuccessMessage.class
 com\backend\ecommerce\service\MyUserDetailsService.class
+com\backend\ecommerce\model\repository\AccessTokenRepo.class
 com\backend\ecommerce\service\MyCustomUserDetails.class
 com\backend\ecommerce\model\Review.class
 com\backend\ecommerce\api\dto\RegisterRequest.class
@@ -36,6 +38,7 @@ com\backend\ecommerce\service\UserService.class
 com\backend\ecommerce\model\repository\VerificationTokenRepo.class
 com\backend\ecommerce\api\dto\LoginRequest.class
 com\backend\ecommerce\exception\CustomControllerAdvice.class
+com\backend\ecommerce\model\AccessToken.class
 com\backend\ecommerce\model\Rating.class
 com\backend\ecommerce\model\VerificationToken.class
 com\backend\ecommerce\service\interfaces\IAdminService.class

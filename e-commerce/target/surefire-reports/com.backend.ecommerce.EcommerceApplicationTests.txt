@@ -1,4 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: com.backend.ecommerce.EcommerceApplicationTests
 -------------------------------------------------------------------------------
-Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 11.127 s - in com.backend.ecommerce.EcommerceApplicationTests
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 10.292 s - in com.backend.ecommerce.EcommerceApplicationTests

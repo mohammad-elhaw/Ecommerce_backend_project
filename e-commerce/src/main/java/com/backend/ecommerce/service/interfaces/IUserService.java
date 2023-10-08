@@ -18,7 +18,7 @@ public interface IUserService {
     void createUser(RegisterRequest registerRequest, HttpServletRequest request) throws UserAlreadyExistsException;
     void saveEmailToken(LocalUser user, String verificationToken);
     ResponseEntity<?> refreshToken(HttpServletRequest request) throws RefreshTokenException;
-    String verifyEmail(String token);
+    ResponseEntity<?> verifyEmail(String token);
     void enableUser(String email, HttpServletRequest request);
     void logoutUser();
 }

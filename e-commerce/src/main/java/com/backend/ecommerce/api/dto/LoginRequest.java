@@ -13,11 +13,11 @@ import lombok.Setter;
 @Setter
 public class LoginRequest {
 
-    @NotBlank
-    @NotNull
+    @NotBlank(message = "Email should not be empty")
+    @NotNull(message = "Email should not be null")
     private String email;
-    @NotBlank
-    @NotNull
+    @NotBlank(message = "password should not be empty")
+    @NotNull(message = "password should not be null")
     private String password;
 
 }

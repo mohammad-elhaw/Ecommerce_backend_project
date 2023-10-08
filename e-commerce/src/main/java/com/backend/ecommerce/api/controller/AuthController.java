@@ -3,12 +3,11 @@ package com.backend.ecommerce.api.controller;
 import com.backend.ecommerce.api.dto.ErrorMessage;
 import com.backend.ecommerce.api.dto.LoginRequest;
 import com.backend.ecommerce.api.dto.RegisterRequest;
+import com.backend.ecommerce.api.dto.SuccessMessage;
 import com.backend.ecommerce.exception.InvalidEmailOrPasswordException;
 import com.backend.ecommerce.exception.RefreshTokenException;
 import com.backend.ecommerce.exception.UserAlreadyExistsException;
 import com.backend.ecommerce.exception.UserIsNotEnableException;
-import com.backend.ecommerce.service.JWTService;
-import com.backend.ecommerce.service.RefreshTokenService;
 import com.backend.ecommerce.service.interfaces.IUserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -25,8 +24,6 @@ import java.util.Date;
 public class AuthController {
 
     private IUserService userService;
-    private JWTService jwtService;
-    private RefreshTokenService refreshTokenService;
 
 
     @PostMapping("/register")
@@ -46,7 +43,7 @@ public class AuthController {
     }
 
     @GetMapping("/verifyEmail")
-    public String verifyEmail(@RequestParam("token") String token){
+    public ResponseEntity<?> verifyEmail(@RequestParam("token") String token){
         return userService.verifyEmail(token);
     }
 
@@ -60,11 +57,19 @@ public class AuthController {
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest){
         try{
             return userService.loginUser(loginRequest);
-        } catch (InvalidEmailOrPasswordException | UserIsNotEnableException e) {
+        } catch (InvalidEmailOrPasswordException e) {
             return ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)
                     .body(new ErrorMessage(
                             HttpStatus.UNAUTHORIZED.value(),
+                            new Date(),
+                            e.getMessage()
+                    ));
+        } catch (UserIsNotEnableException e) {
+            return ResponseEntity
+                    .status(HttpStatus.FORBIDDEN)
+                    .body(new ErrorMessage(
+                            HttpStatus.FORBIDDEN.value(),
                             new Date(),
                             e.getMessage()
                     ));
@@ -79,6 +84,10 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<?> logout(){
         userService.logoutUser();
-        return new ResponseEntity<>(HttpStatus.OK);
+        return ResponseEntity.ok().body(new SuccessMessage(
+                HttpStatus.OK.value(),
+                new Date(),
+                "You Logout Successfully"
+        ));
     }
 }

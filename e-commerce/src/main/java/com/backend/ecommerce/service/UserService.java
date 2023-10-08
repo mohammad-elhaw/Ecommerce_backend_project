@@ -13,8 +13,6 @@ import com.backend.ecommerce.model.repository.UserRepo;
 import com.backend.ecommerce.model.repository.VerificationTokenRepo;
 import com.backend.ecommerce.service.interfaces.IUserService;
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.AllArgsConstructor;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpHeaders;
@@ -48,6 +46,9 @@ public class UserService implements IUserService {
     private AccessTokenRepo accessTokenRepo;
     @Value("${jwt.expiration}")
     private Long JWT_EXPIRATION_DATE;
+
+    @Value("${client.url}")
+    private String CLIENT_URL;
 
     public UserService(UserRepo userRepo,
                        RoleRepo roleRepo,
@@ -99,7 +100,7 @@ public class UserService implements IUserService {
                 throw new UserIsNotEnableException("activate your account to login.");
             }
         }else{
-            throw new InvalidEmailOrPasswordException("Invalid Email Or password.");
+            throw new InvalidEmailOrPasswordException("Invalid Email Or Password.");
         }
     }
 
@@ -122,12 +123,12 @@ public class UserService implements IUserService {
 
         LocalUser savedUser =userRepo.save(user);
 
-        publisher.publishEvent(new RegistrationCompleteEvent(savedUser, applicationUrl(request)));
+        publisher.publishEvent(new RegistrationCompleteEvent(savedUser, CLIENT_URL));
     }
 
-    private String applicationUrl(HttpServletRequest request) {
-        return "http://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath();
-    }
+//    private String applicationUrl(HttpServletRequest request) {
+//        return "http://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath();
+//    }
 
     @Override
     public void saveEmailToken(LocalUser user, String token) {
@@ -168,29 +169,49 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public String verifyEmail(String token) {
+    public ResponseEntity<?> verifyEmail(String token) {
         Optional<VerificationToken> theToken = verificationTokenRepo.findByToken(token);
         if(theToken.isPresent()){
             LocalUser user = theToken.get().getUser();
             if(user.isEnabled()){
-                return "this account has already verified, you can login.";
+                return ResponseEntity.status(HttpStatus.OK)
+                        .body(new SuccessMessage(
+                                HttpStatus.OK.value(),
+                                new Date(),
+                                "this account has already verified, you can login."
+                        ));
             }
             if(!jwtService.validateToken(token)){
-                return "Token is expired verify the account again.";
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(new ErrorMessage(
+                                HttpStatus.BAD_REQUEST.value(),
+                                new Date(),
+                                "Token is expired verify the account again."
+                        ));
             }
             user.setEnabled(true);
             userRepo.save(user);
-            return "now you can login.";
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(new SuccessMessage(
+                            HttpStatus.OK.value(),
+                            new Date(),
+                            "now you can login."
+                    ));
         }
         else{
-            return "invalid verification token";
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ErrorMessage(
+                            HttpStatus.BAD_REQUEST.value(),
+                            new Date(),
+                            "invalid verification token"
+                    ));
         }
     }
 
     @Override
     public void enableUser(String email, HttpServletRequest request) {
         Optional<LocalUser> user = userRepo.findByEmailIgnoreCase(email);
-        publisher.publishEvent(new RegistrationCompleteEvent(user.get(), applicationUrl(request)));
+        publisher.publishEvent(new RegistrationCompleteEvent(user.get(), CLIENT_URL));
 
     }
 
@@ -201,6 +222,7 @@ public class UserService implements IUserService {
         LocalUser user = userRepo.findByEmailIgnoreCase(email).get();
         refreshTokenService.deleteByUser(user);
         accessTokenRepo.deleteByUser(user);
+
         SecurityContextHolder.getContext().setAuthentication(null);
     }
 }

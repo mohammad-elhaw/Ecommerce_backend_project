@@ -14,5 +14,5 @@ import java.util.Date;
 public class SuccessMessage {
     private int value;
     private Date date;
-    private String error;
+    private String Success;
 }

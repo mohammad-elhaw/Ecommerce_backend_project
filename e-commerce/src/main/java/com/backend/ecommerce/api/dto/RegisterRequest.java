@@ -27,7 +27,7 @@ public class RegisterRequest {
     @NotNull(message = "phone number should not be null")
     @NotBlank(message = "phone number should not be empty")
     private String phoneNumber;
-    @NotBlank(message = "password should not be null")
+    @NotBlank(message = "password should not be empty")
     @NotNull(message = "password should not be null")
     @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[#$@!%&*?])[A-Za-z\\d#$@!%&*?]{8,}$"
             , message = "Password must have minimum eight characters, at least one letter, one number and one special character:")

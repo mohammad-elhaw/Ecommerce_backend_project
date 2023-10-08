@@ -1,11 +1,16 @@
 package com.backend.ecommerce.model;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "products")
@@ -20,13 +25,13 @@ public class Product {
     @Column(name = "product_id", nullable = false)
     private Long productId;
 
-    @Column(name = "name", nullable = false, unique = true)
+    @Column(name = "name", nullable = false)
     private String name;
 
     @Column(name = "short_description", nullable = false)
     private String shortDescription;
 
-    @Column(name = "long_description")
+    @Column(name = "long_description", nullable = false)
     private String longDescription;
 
     @Column(name = "price", nullable = false)
@@ -38,9 +43,13 @@ public class Product {
     @Column(name = "discount_percent")
     private Double discountPercent;
 
-
     @Column(name = "image_url", nullable = false)
     private String imageUrl;
+
+    @Embedded
+    @ElementCollection
+    @Column(name = "sizes")
+    private Set<Size> size = new HashSet<>();
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "category_id", nullable = false)

@@ -26,7 +26,7 @@ public class AdminService implements IAdminService {
     @Override
     public LocalUser createAdmin(RegisterRequest registerRequest) throws UserAlreadyExistsException {
 
-        if(userRepo.findByEmailIgnoreCase(registerRequest.getEmail()) != null){
+        if(userRepo.findByEmailIgnoreCase(registerRequest.getEmail()).isPresent()){
             throw new UserAlreadyExistsException("User Already Exists.");
         }
 

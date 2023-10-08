@@ -181,7 +181,7 @@ public class UserService implements IUserService {
                                 "this account has already verified, you can login."
                         ));
             }
-            if(!jwtService.validateToken(token)){
+            if(!jwtService.validateEmailToken(token)){
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(new ErrorMessage(
                                 HttpStatus.BAD_REQUEST.value(),
@@ -212,7 +212,6 @@ public class UserService implements IUserService {
     public void enableUser(String email, HttpServletRequest request) {
         Optional<LocalUser> user = userRepo.findByEmailIgnoreCase(email);
         publisher.publishEvent(new RegistrationCompleteEvent(user.get(), CLIENT_URL));
-
     }
 
     @Override

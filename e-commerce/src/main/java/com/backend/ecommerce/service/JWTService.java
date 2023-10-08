@@ -103,9 +103,17 @@ public class JWTService {
         return claims.getSubject();
     }
 
-    public boolean validateToken(String token){
+    public boolean validateEmailToken(String token){
+        return validateToken(token);
+    }
+
+    public boolean validateAccessToken(String token){
         Optional<AccessToken> accessToken = accessTokenRepo.findByAccessToken(token);
         if(accessToken.isEmpty()) return false;
+        return validateToken(token);
+    }
+
+    public boolean validateToken(String token){
         try{
             Jwts
                     .parserBuilder()

@@ -38,6 +38,6 @@ public class RegistrationCompleteEventListener implements ApplicationListener<Re
 
         // 5. send the email
         log.info("Click the link to verify your registration :{} ", url);
-            emailService.sendEmail(url, user);
+            emailService.sendVerificationEmail(url, user);
     }
 }

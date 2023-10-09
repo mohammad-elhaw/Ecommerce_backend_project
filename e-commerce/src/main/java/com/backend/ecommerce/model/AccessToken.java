@@ -28,4 +28,10 @@ public class AccessToken {
     @OneToOne
     @JoinColumn(name = "user_id")
     private LocalUser user;
+
+    public AccessToken(String accessToken, LocalUser user, Instant expiryDate) {
+        this.accessToken = accessToken;
+        this.user = user;
+        this.expiryDate = expiryDate;
+    }
 }

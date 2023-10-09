@@ -30,7 +30,7 @@ public class WebSecurityConfig {
         http.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         http.authorizeHttpRequests((auth)->auth
-                        .requestMatchers("/products/**", "/contact", "/admin/login", "/auth/verifyEmail", "auth/refreshToken", "/auth/register", "/auth/login", "auth/activateAccount", "/error").permitAll()
+                        .requestMatchers("/products/**", "/contact", "/admin/login", "/auth/**", "/error").permitAll()
                         .requestMatchers("/admin/products/**", "/admin/orders/**", "/admin/**").hasRole("ADMIN")
                         .requestMatchers("/cart/**", "/users/**", "cart_items/**", "/orders/**", "/ratings/**")
                         .hasAnyRole("USER", "ADMIN").anyRequest().authenticated())

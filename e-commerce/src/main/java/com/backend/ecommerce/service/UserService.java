@@ -2,15 +2,10 @@ package com.backend.ecommerce.service;
 
 import com.backend.ecommerce.api.dto.*;
 import com.backend.ecommerce.event.RegistrationCompleteEvent;
-import com.backend.ecommerce.exception.InvalidEmailOrPasswordException;
-import com.backend.ecommerce.exception.RefreshTokenException;
-import com.backend.ecommerce.exception.UserAlreadyExistsException;
-import com.backend.ecommerce.exception.UserIsNotEnableException;
+import com.backend.ecommerce.event.ResetPasswordEvent;
+import com.backend.ecommerce.exception.*;
 import com.backend.ecommerce.model.*;
-import com.backend.ecommerce.model.repository.AccessTokenRepo;
-import com.backend.ecommerce.model.repository.RoleRepo;
-import com.backend.ecommerce.model.repository.UserRepo;
-import com.backend.ecommerce.model.repository.VerificationTokenRepo;
+import com.backend.ecommerce.model.repository.*;
 import com.backend.ecommerce.service.interfaces.IUserService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,6 +18,7 @@ import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -44,6 +40,7 @@ public class UserService implements IUserService {
     private RefreshTokenService refreshTokenService;
     private ApplicationEventPublisher publisher;
     private AccessTokenRepo accessTokenRepo;
+    private ResetTokenRepo resetTokenRepo;
     @Value("${jwt.expiration}")
     private Long JWT_EXPIRATION_DATE;
 
@@ -58,7 +55,8 @@ public class UserService implements IUserService {
                        AuthenticationProvider authenticationProvider,
                        RefreshTokenService refreshTokenService,
                        ApplicationEventPublisher publisher,
-                       AccessTokenRepo accessTokenRepo) {
+                       AccessTokenRepo accessTokenRepo,
+                       ResetTokenRepo resetTokenRepo) {
         this.userRepo = userRepo;
         this.roleRepo = roleRepo;
         this.verificationTokenRepo = verificationTokenRepo;
@@ -68,6 +66,7 @@ public class UserService implements IUserService {
         this.refreshTokenService = refreshTokenService;
         this.publisher = publisher;
         this.accessTokenRepo = accessTokenRepo;
+        this.resetTokenRepo = resetTokenRepo;
     }
 
     @Override
@@ -105,7 +104,7 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public void createUser(RegisterRequest registerRequest, HttpServletRequest request) throws UserAlreadyExistsException {
+    public void createUser(RegisterRequest registerRequest) throws UserAlreadyExistsException {
 
         if(userRepo.findByEmailIgnoreCase(registerRequest.getEmail()).isPresent()){
             throw new UserAlreadyExistsException("User Already Exists.");
@@ -148,7 +147,7 @@ public class UserService implements IUserService {
             return refreshTokenService.findByToken(refreshToken)
                     .map(RefreshToken::getUser)
                     .map(localUser -> {
-                        String jwtToken = jwtService.generateToken(localUser);
+                        String jwtToken = createAccessToken(localUser);
                         ResponseCookie jwtCookie = jwtService.generateJwtCookie(jwtToken);
 
                         return ResponseEntity.ok()
@@ -158,7 +157,6 @@ public class UserService implements IUserService {
                                         new Date(),
                                         "Token is refreshed successfully."));
                     }).get();
-
         }
         return ResponseEntity.
                 badRequest().
@@ -166,6 +164,15 @@ public class UserService implements IUserService {
                         HttpStatus.BAD_REQUEST.value(),
                         new Date(),
                         "Refreshed token is empty"));
+    }
+
+    private String createAccessToken(LocalUser user) {
+        Optional<AccessToken> tokenDB = accessTokenRepo.findByUser(user);
+        tokenDB.ifPresent(token -> accessTokenRepo.delete(token));
+        String jwtAccess =jwtService.generateToken(user);
+        AccessToken accessToken = new AccessToken(jwtAccess,user, Instant.now().plusMillis(JWT_EXPIRATION_DATE));
+        accessTokenRepo.save(accessToken);
+        return jwtAccess;
     }
 
     @Override
@@ -209,19 +216,56 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public void enableUser(String email, HttpServletRequest request) {
+    public void enableUser(String email) throws UserIsEnableException, EmailNotFoundException {
         Optional<LocalUser> user = userRepo.findByEmailIgnoreCase(email);
-        publisher.publishEvent(new RegistrationCompleteEvent(user.get(), CLIENT_URL));
+        if(user.isPresent()){
+            if(user.get().isEnabled()){
+                throw new UserIsEnableException("this email is already active.");
+            }
+            publisher.publishEvent(new RegistrationCompleteEvent(user.get(), CLIENT_URL));
+        }
+        throw new EmailNotFoundException("this email is invalid.");
     }
 
     @Override
-    public void logoutUser() {
+    public void logoutUser() throws EmailNotFoundException {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = (String) authentication.getPrincipal();
-        LocalUser user = userRepo.findByEmailIgnoreCase(email).get();
-        refreshTokenService.deleteByUser(user);
-        accessTokenRepo.deleteByUser(user);
-
+        Optional<LocalUser> user = userRepo.findByEmailIgnoreCase(email);
+        if(user.isEmpty()){
+            throw new EmailNotFoundException("Invalid token");
+        }
+        refreshTokenService.deleteByUser(user.get());
+        accessTokenRepo.deleteByUser(user.get());
         SecurityContextHolder.getContext().setAuthentication(null);
     }
+
+    @Override
+    public void createResetPassword(String email) throws EmailNotFoundException {
+        Optional<LocalUser> user = userRepo.findByEmailIgnoreCase(email);
+        if(user.isEmpty()){
+            throw new EmailNotFoundException("Your Email is Invalid");
+        }
+        publisher.publishEvent(new ResetPasswordEvent(user.get(), CLIENT_URL));
+    }
+
+    @Override
+    public void saveResetToken(LocalUser user, String token) {
+        Optional<ResetToken> theToken = resetTokenRepo.findByUser(user);
+        theToken.ifPresent(resetToken -> resetTokenRepo.delete(resetToken));
+        ResetToken resetToken = new ResetToken(token, user);
+        resetTokenRepo.save(resetToken);
+    }
+
+    @Override
+    public void resetPassword(ResetPasswordRequest request) throws InvalidResetTokenException {
+        Optional<ResetToken> resetToken = resetTokenRepo.findByResetToken(request.getToken());
+        if(resetToken.isEmpty() || !jwtService.validateToken(resetToken.get().getResetToken())){
+            throw new InvalidResetTokenException("Reset token invalid try to reset password again.");
+        }
+        LocalUser user = resetToken.get().getUser();
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        userRepo.save(user);
+    }
+
 }

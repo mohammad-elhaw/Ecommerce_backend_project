@@ -223,8 +223,9 @@ public class UserService implements IUserService {
                 throw new UserIsEnableException("this email is already active.");
             }
             publisher.publishEvent(new RegistrationCompleteEvent(user.get(), CLIENT_URL));
+        }else{
+            throw new EmailNotFoundException("this email is invalid.");
         }
-        throw new EmailNotFoundException("this email is invalid.");
     }
 
     @Override

@@ -2,6 +2,7 @@ package com.backend.ecommerce.api.config;
 
 import com.backend.ecommerce.service.MyUserDetailsService;
 import lombok.AllArgsConstructor;
+import org.modelmapper.ModelMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -30,8 +31,8 @@ public class WebSecurityConfig {
         http.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         http.authorizeHttpRequests((auth)->auth
-                        .requestMatchers("/products/**", "/contact", "/admin/login", "/auth/**", "/error").permitAll()
-                        .requestMatchers("/admin/products/**", "/admin/orders/**", "/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/products/**", "/contact", "/admin/login", "/auth/**", "/error", "/public/**").permitAll()
+                        .requestMatchers("/admin/product/**", "/admin/order/**", "/admin/**").hasRole("ADMIN")
                         .requestMatchers("/cart/**", "/users/**", "cart_items/**", "/orders/**", "/ratings/**")
                         .hasAnyRole("USER", "ADMIN").anyRequest().authenticated())
                 .formLogin(Customizer.withDefaults())
@@ -51,6 +52,11 @@ public class WebSecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder(){
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public ModelMapper modelMapper(){
+        return new ModelMapper();
     }
 
 }

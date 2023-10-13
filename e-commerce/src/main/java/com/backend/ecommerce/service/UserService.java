@@ -8,6 +8,7 @@ import com.backend.ecommerce.model.*;
 import com.backend.ecommerce.model.repository.*;
 import com.backend.ecommerce.service.interfaces.IUserService;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpHeaders;
@@ -18,7 +19,6 @@ import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -27,47 +27,27 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 @Service
+@RequiredArgsConstructor
 public class UserService implements IUserService {
 
-    private UserRepo userRepo;
-    private RoleRepo roleRepo;
-    private VerificationTokenRepo verificationTokenRepo;
-    private PasswordEncoder passwordEncoder;
-    private JWTService jwtService;
-    private AuthenticationProvider authenticationProvider;
-    private RefreshTokenService refreshTokenService;
-    private ApplicationEventPublisher publisher;
-    private AccessTokenRepo accessTokenRepo;
-    private ResetTokenRepo resetTokenRepo;
+    private final UserRepo userRepo;
+    private final RoleRepo roleRepo;
+    private final VerificationTokenRepo verificationTokenRepo;
+    private final PasswordEncoder passwordEncoder;
+    private final JWTService jwtService;
+    private final AuthenticationProvider authenticationProvider;
+    private final RefreshTokenService refreshTokenService;
+    private final ApplicationEventPublisher publisher;
+    private final AccessTokenRepo accessTokenRepo;
+    private final ResetTokenRepo resetTokenRepo;
     @Value("${jwt.expiration}")
     private Long JWT_EXPIRATION_DATE;
 
     @Value("${client.url}")
     private String CLIENT_URL;
-
-    public UserService(UserRepo userRepo,
-                       RoleRepo roleRepo,
-                       VerificationTokenRepo verificationTokenRepo,
-                       PasswordEncoder passwordEncoder,
-                       JWTService jwtService,
-                       AuthenticationProvider authenticationProvider,
-                       RefreshTokenService refreshTokenService,
-                       ApplicationEventPublisher publisher,
-                       AccessTokenRepo accessTokenRepo,
-                       ResetTokenRepo resetTokenRepo) {
-        this.userRepo = userRepo;
-        this.roleRepo = roleRepo;
-        this.verificationTokenRepo = verificationTokenRepo;
-        this.passwordEncoder = passwordEncoder;
-        this.jwtService = jwtService;
-        this.authenticationProvider = authenticationProvider;
-        this.refreshTokenService = refreshTokenService;
-        this.publisher = publisher;
-        this.accessTokenRepo = accessTokenRepo;
-        this.resetTokenRepo = resetTokenRepo;
-    }
 
     @Override
     public ResponseEntity<LoginResponse> loginUser(LoginRequest loginRequest) throws InvalidEmailOrPasswordException, UserIsNotEnableException {
@@ -79,7 +59,7 @@ public class UserService implements IUserService {
                 MyCustomUserDetails userDetails = (MyCustomUserDetails) authentication.getPrincipal();
 
                 Optional<AccessToken> accessToken = accessTokenRepo.findByUser(userDetails.getUser());
-                accessToken.ifPresent(token -> accessTokenRepo.delete(token));
+                accessToken.ifPresent(accessTokenRepo::delete);
 
                 String token = jwtService.generateToken(userDetails.getUser());
                 AccessToken theToken = new AccessToken();
@@ -122,7 +102,9 @@ public class UserService implements IUserService {
 
         LocalUser savedUser =userRepo.save(user);
 
-        publisher.publishEvent(new RegistrationCompleteEvent(savedUser, CLIENT_URL));
+
+        CompletableFuture.runAsync(()->publisher.publishEvent(new RegistrationCompleteEvent(savedUser, CLIENT_URL)));
+        //publisher.publishEvent(new RegistrationCompleteEvent(savedUser, CLIENT_URL));
     }
 
 //    private String applicationUrl(HttpServletRequest request) {
@@ -132,7 +114,7 @@ public class UserService implements IUserService {
     @Override
     public void saveEmailToken(LocalUser user, String token) {
         Optional<VerificationToken> theToken = verificationTokenRepo.findByUser(user);
-        theToken.ifPresent(verificationToken -> verificationTokenRepo.delete(verificationToken));
+        theToken.ifPresent(verificationTokenRepo::delete);
         VerificationToken verificationToken = new VerificationToken(user, token);
         verificationTokenRepo.save(verificationToken);
     }
@@ -168,7 +150,7 @@ public class UserService implements IUserService {
 
     private String createAccessToken(LocalUser user) {
         Optional<AccessToken> tokenDB = accessTokenRepo.findByUser(user);
-        tokenDB.ifPresent(token -> accessTokenRepo.delete(token));
+        tokenDB.ifPresent(accessTokenRepo::delete);
         String jwtAccess =jwtService.generateToken(user);
         AccessToken accessToken = new AccessToken(jwtAccess,user, Instant.now().plusMillis(JWT_EXPIRATION_DATE));
         accessTokenRepo.save(accessToken);
@@ -217,15 +199,14 @@ public class UserService implements IUserService {
 
     @Override
     public void enableUser(String email) throws UserIsEnableException, EmailNotFoundException {
-        Optional<LocalUser> user = userRepo.findByEmailIgnoreCase(email);
-        if(user.isPresent()){
-            if(user.get().isEnabled()){
-                throw new UserIsEnableException("this email is already active.");
-            }
-            publisher.publishEvent(new RegistrationCompleteEvent(user.get(), CLIENT_URL));
-        }else{
-            throw new EmailNotFoundException("this email is invalid.");
+        LocalUser user = userRepo.findByEmailIgnoreCase(email)
+                .orElseThrow(()->new EmailNotFoundException("this email is invalid"));
+
+        if(user.isEnabled()){
+            throw new UserIsEnableException("this email is already active.");
         }
+        CompletableFuture.runAsync(()->publisher.publishEvent(new RegistrationCompleteEvent(user, CLIENT_URL)));
+//            publisher.publishEvent(new RegistrationCompleteEvent(user.get(), CLIENT_URL));
     }
 
     @Override
@@ -247,13 +228,14 @@ public class UserService implements IUserService {
         if(user.isEmpty()){
             throw new EmailNotFoundException("Your Email is Invalid");
         }
-        publisher.publishEvent(new ResetPasswordEvent(user.get(), CLIENT_URL));
+        CompletableFuture.runAsync(()->publisher.publishEvent(new ResetPasswordEvent(user.get(), CLIENT_URL)));
+//        publisher.publishEvent(new ResetPasswordEvent(user.get(), CLIENT_URL));
     }
 
     @Override
     public void saveResetToken(LocalUser user, String token) {
         Optional<ResetToken> theToken = resetTokenRepo.findByUser(user);
-        theToken.ifPresent(resetToken -> resetTokenRepo.delete(resetToken));
+        theToken.ifPresent(resetTokenRepo::delete);
         ResetToken resetToken = new ResetToken(token, user);
         resetTokenRepo.save(resetToken);
     }

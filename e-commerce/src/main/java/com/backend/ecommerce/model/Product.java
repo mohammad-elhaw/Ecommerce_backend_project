@@ -1,5 +1,6 @@
 package com.backend.ecommerce.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -8,9 +9,7 @@ import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @Entity
 @Table(name = "products")
@@ -22,39 +21,28 @@ public class Product {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "product_id", nullable = false)
+    @Column(nullable = false)
     private Long productId;
 
-    @Column(name = "name", nullable = false)
-    private String name;
+    private String productName;
 
-    @Column(name = "short_description", nullable = false)
     private String shortDescription;
 
-    @Column(name = "long_description", nullable = false)
     private String longDescription;
 
-    @Column(name = "price", nullable = false)
     private Double price;
 
-    @Column(name = "discount_price")
-    private Double discountPrice;
+    private double discountPercent;
 
-    @Column(name = "discount_percent")
-    private Double discountPercent;
+    private double discountPrice;
 
-    @Column(name = "image_url", nullable = false)
-    private String imageUrl;
-
-    @Embedded
-    @ElementCollection
-    @Column(name = "sizes")
-    private Set<Size> size = new HashSet<>();
+    private String image;
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;
 
+    @JsonManagedReference
     @OneToOne(mappedBy = "product", cascade = CascadeType.REMOVE, optional = false, orphanRemoval = true)
     private Inventory inventory;
 

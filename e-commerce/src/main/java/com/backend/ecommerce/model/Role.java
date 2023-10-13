@@ -31,7 +31,7 @@ public class Role {
     private List<LocalUser> users = new ArrayList<>();
 
 
-    @JsonManagedReference
+    @JsonIgnore
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "role_privileges",

@@ -47,11 +47,30 @@ public class CustomControllerAdvice {
             errors.add(errorMessage);
         }
 
-
         return new ErrorMessage(
                 HttpStatus.BAD_REQUEST.value(),
                 new Date(),
                 errors.get(0)
+        );
+    }
+
+    @ExceptionHandler(APIException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorMessage handleAPIException(APIException ex){
+        return new ErrorMessage(
+                HttpStatus.BAD_REQUEST.value(),
+                new Date(),
+                ex.getMessage()
+        );
+    }
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorMessage handleResourceNotFoundException(ResourceNotFoundException ex){
+        return new ErrorMessage(
+                HttpStatus.NOT_FOUND.value(),
+                new Date(),
+                ex.getMessage()
         );
     }
 

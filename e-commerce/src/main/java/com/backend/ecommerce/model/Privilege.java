@@ -1,8 +1,5 @@
 package com.backend.ecommerce.model;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -25,7 +22,6 @@ public class Privilege {
 
     private String privilegeName;
 
-    @JsonBackReference
     @ManyToMany(mappedBy = "privileges")
     private List<Role> roles;
 

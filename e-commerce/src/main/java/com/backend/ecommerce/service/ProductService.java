@@ -1,7 +1,8 @@
 package com.backend.ecommerce.service;
 
-import com.backend.ecommerce.api.dto.ProductDTO;
+import com.backend.ecommerce.api.dto.CreateProductDTO;
 import com.backend.ecommerce.api.dto.ProductResponse;
+import com.backend.ecommerce.api.dto.ProductResponseDTO;
 import com.backend.ecommerce.exception.APIException;
 import com.backend.ecommerce.exception.ResourceNotFoundException;
 import com.backend.ecommerce.model.Category;
@@ -10,6 +11,7 @@ import com.backend.ecommerce.model.Product;
 import com.backend.ecommerce.model.repository.CategoryRepo;
 import com.backend.ecommerce.model.repository.InventoryRepo;
 import com.backend.ecommerce.model.repository.ProductRepo;
+import com.backend.ecommerce.service.interfaces.IImageService;
 import com.backend.ecommerce.service.interfaces.IProductService;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -20,12 +22,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
 
 @Service
-@Transactional
 @RequiredArgsConstructor
 public class ProductService implements IProductService {
 
@@ -33,37 +35,40 @@ public class ProductService implements IProductService {
     private final ProductRepo productRepo;
     private final InventoryRepo inventoryRepo;
     private final ModelMapper mapper;
+    private final IImageService imageService;
 
     @SneakyThrows
     @Override
-    public void createProduct(ProductDTO productDTO, Long categoryId) {
+    @Transactional
+    public void createProduct(CreateProductDTO createProductDTO, Long categoryId) {
         Category category = categoryRepo.findById(categoryId)
                 .orElseThrow(()->new ResourceNotFoundException("Category", "categoryId", categoryId));
 
         boolean isProductNotPresent = true;
 
         List<Product> products = category.getProducts();
-        for(int i = 0; i < products.size(); ++i){
-            if(products.get(i).getProductName().equals(productDTO.getProductName())
-                    && products.get(i).getShortDescription().equals(productDTO.getShortDescription())){
+        for (Product value : products) {
+            if (value.getProductName().equals(createProductDTO.getProductName())
+                    && value.getShortDescription().equals(createProductDTO.getShortDescription())) {
                 isProductNotPresent = false;
                 break;
             }
         }
         if(isProductNotPresent){
             Product product = new Product();
-            product.setProductName(productDTO.getProductName());
-            product.setImage("default.png");
+            product.setProductName(createProductDTO.getProductName());
             product.setCategory(category);
-            product.setDiscountPercent(productDTO.getDiscountPercent());
-            double discountPrice = productDTO.getPrice() - ((productDTO.getDiscountPercent() * 0.01) * productDTO.getPrice());
-            product.setDiscountPrice(discountPrice);
-            product.setLongDescription(productDTO.getLongDescription());
-            product.setShortDescription(productDTO.getShortDescription());
-            product.setPrice(productDTO.getPrice());
+            product.setDiscountPercent(createProductDTO.getDiscountPercent());
+            if(createProductDTO.getDiscountPercent() > 0){
+                double discountPrice = createProductDTO.getPrice() - ((createProductDTO.getDiscountPercent() * 0.01) * createProductDTO.getPrice());
+                product.setDiscountPrice(discountPrice);
+            }
+            product.setLongDescription(createProductDTO.getLongDescription());
+            product.setShortDescription(createProductDTO.getShortDescription());
+            product.setPrice(createProductDTO.getPrice());
             product = productRepo.save(product);
 
-            Inventory inventory = new Inventory(productDTO.getQuantity(), product);
+            Inventory inventory = new Inventory(createProductDTO.getQuantity(), product);
             inventoryRepo.save(inventory);
         }else{
             throw new APIException("Product already exists.");
@@ -71,6 +76,7 @@ public class ProductService implements IProductService {
     }
 
     @Override
+    @Transactional
     public void deleteProduct(Long productId) {
         Product product = productRepo.findById(productId)
                 .orElseThrow(()->new ResourceNotFoundException("Product", "productId", productId));
@@ -122,11 +128,22 @@ public class ProductService implements IProductService {
         return createProductResponse(products, pageProducts);
     }
 
+    @Override
+    @Transactional
+    public void updateProductImage(Long productId, MultipartFile file) {
+        Product productFromDB = productRepo.findById(productId)
+                .orElseThrow(()-> new ResourceNotFoundException("Product", "productId", productId));
+
+        String imageUrl = imageService.upload(file);
+        productFromDB.setImageUrl(imageUrl);
+        productRepo.save(productFromDB);
+    }
+
     private ProductResponse createProductResponse(List<Product> products, Page<Product> pageProducts) {
-        List<ProductDTO> productDTOS = products.stream()
-                .map(product -> mapper.map(product, ProductDTO.class)).toList();
+        List<ProductResponseDTO> productResponseDTOS = products.stream()
+                .map(product -> mapper.map(product, ProductResponseDTO.class)).toList();
         ProductResponse productResponse = new ProductResponse();
-        productResponse.setContent(productDTOS);
+        productResponse.setContent(productResponseDTOS);
         productResponse.setPageNumber(pageProducts.getNumber());
         productResponse.setPageSize(pageProducts.getSize());
         productResponse.setTotalElements(pageProducts.getTotalElements());

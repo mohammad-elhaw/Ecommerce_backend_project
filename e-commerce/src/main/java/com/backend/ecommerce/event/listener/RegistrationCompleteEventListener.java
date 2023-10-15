@@ -4,7 +4,7 @@ import com.backend.ecommerce.event.RegistrationCompleteEvent;
 import com.backend.ecommerce.model.LocalUser;
 import com.backend.ecommerce.service.EmailService;
 import com.backend.ecommerce.service.JWTService;
-import com.backend.ecommerce.service.interfaces.IUserService;
+import com.backend.ecommerce.service.interfaces.IAuthUserService;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +18,7 @@ public class RegistrationCompleteEventListener implements ApplicationListener<Re
 
 
     private JWTService jwtService;
-    private IUserService userService;
+    private IAuthUserService userService;
     private EmailService emailService;
 
     @SneakyThrows

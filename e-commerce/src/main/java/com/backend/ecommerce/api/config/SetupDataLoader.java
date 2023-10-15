@@ -6,6 +6,8 @@ import com.backend.ecommerce.model.Role;
 import com.backend.ecommerce.model.repository.PrivilegeRepo;
 import com.backend.ecommerce.model.repository.RoleRepo;
 import com.backend.ecommerce.model.repository.UserRepo;
+import com.backend.ecommerce.service.interfaces.ICartService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
@@ -17,16 +19,14 @@ import java.util.Arrays;
 import java.util.List;
 
 @Component
+@RequiredArgsConstructor
 public class SetupDataLoader implements ApplicationListener<ContextRefreshedEvent> {
 
-    @Autowired
-    private UserRepo userRepo;
-    @Autowired
-    private RoleRepo roleRepo;
-    @Autowired
-    private PrivilegeRepo privilegeRepo;
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    private final UserRepo userRepo;
+    private final RoleRepo roleRepo;
+    private final PrivilegeRepo privilegeRepo;
+    private final PasswordEncoder passwordEncoder;
+    private final ICartService cartService;
 
     @Override
     @Transactional
@@ -54,7 +54,8 @@ public class SetupDataLoader implements ApplicationListener<ContextRefreshedEven
             localUser.setRoles(Arrays.asList(adminRole));
             localUser.setEnabled(true);
             userRepo.save(localUser);
-        }else return;
+            cartService.createCart(localUser);
+        }
     }
 
 

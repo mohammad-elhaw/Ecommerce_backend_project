@@ -1,7 +1,7 @@
 package com.backend.ecommerce.api.controller;
 
 import com.backend.ecommerce.api.config.AppConstants;
-import com.backend.ecommerce.api.dto.ProductDTO;
+import com.backend.ecommerce.api.dto.CreateProductDTO;
 import com.backend.ecommerce.api.dto.ProductResponse;
 import com.backend.ecommerce.service.interfaces.IProductService;
 import jakarta.validation.Valid;
@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping
@@ -18,9 +19,16 @@ public class ProductController {
     private final IProductService productService;
 
     @PostMapping("/admin/product/category/{categoryId}")
-    public ResponseEntity<?> createProduct(@Valid @RequestBody ProductDTO product, @PathVariable Long categoryId){
+    public ResponseEntity<?> createProduct(@Valid @RequestBody CreateProductDTO product, @PathVariable Long categoryId){
         productService.createProduct(product, categoryId);
         return new ResponseEntity<>(HttpStatus.CREATED);
+    }
+
+    @PutMapping("/admin/product/{productId}/image")
+    public ResponseEntity<?> updateProductImage(@PathVariable Long productId,
+                                                @RequestParam("image")MultipartFile file){
+        productService.updateProductImage(productId, file);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @DeleteMapping("/admin/product/{productId}")

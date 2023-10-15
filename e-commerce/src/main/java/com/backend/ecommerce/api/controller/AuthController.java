@@ -2,7 +2,7 @@ package com.backend.ecommerce.api.controller;
 
 import com.backend.ecommerce.api.dto.*;
 import com.backend.ecommerce.exception.*;
-import com.backend.ecommerce.service.interfaces.IUserService;
+import com.backend.ecommerce.service.interfaces.IAuthUserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -17,8 +17,7 @@ import java.util.Date;
 @AllArgsConstructor
 public class AuthController {
 
-    private IUserService userService;
-
+    private IAuthUserService userService;
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest registerRequest){
@@ -43,24 +42,7 @@ public class AuthController {
 
     @PostMapping("/activateAccount")
     public ResponseEntity<?> enableTheUser(@RequestParam("email") String email){
-        try{
-            userService.enableUser(email);
-        } catch (EmailNotFoundException ex) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new ErrorMessage(
-                            HttpStatus.BAD_REQUEST.value(),
-                            new Date(),
-                            ex.getMessage()
-                    ));
-        } catch (UserIsEnableException ex) {
-            return ResponseEntity.status(HttpStatus.OK)
-                    .body(new SuccessMessage(
-                            HttpStatus.OK.value(),
-                            new Date(),
-                            ex.getMessage()
-                    ));
-        }
-
+        userService.enableUser(email);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
@@ -94,16 +76,7 @@ public class AuthController {
 
     @PostMapping("/reset/create")
     public ResponseEntity<?> createResetPassword(@RequestParam("email") String email){
-        try{
-            userService.createResetPassword(email);
-        } catch (EmailNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new ErrorMessage(
-                            HttpStatus.BAD_REQUEST.value(),
-                            new Date(),
-                            "Your Email is invalid."
-                    ));
-        }
+        userService.createResetPassword(email);
         return ResponseEntity.status(HttpStatus.OK)
                 .body(new SuccessMessage(
                         HttpStatus.OK.value(),
@@ -134,17 +107,7 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<?> logout(){
-        try{
-            userService.logoutUser();
-        } catch (EmailNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new ErrorMessage(
-                            HttpStatus.BAD_REQUEST.value(),
-                            new Date(),
-                            e.getMessage()
-                    ));
-        }
-
+        userService.logoutUser();
         return ResponseEntity.ok().body(new SuccessMessage(
                 HttpStatus.OK.value(),
                 new Date(),

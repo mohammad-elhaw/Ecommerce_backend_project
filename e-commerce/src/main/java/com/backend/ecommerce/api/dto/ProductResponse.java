@@ -1,6 +1,5 @@
 package com.backend.ecommerce.api.dto;
 
-import com.backend.ecommerce.model.Product;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -13,7 +12,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ProductResponse {
-    private List<ProductDTO> content;
+    private List<ProductResponseDTO> content;
     private Integer pageNumber;
     private Integer pageSize;
     private Long totalElements;

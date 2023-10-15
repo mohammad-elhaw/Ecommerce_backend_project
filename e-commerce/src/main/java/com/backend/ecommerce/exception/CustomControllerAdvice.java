@@ -1,6 +1,7 @@
 package com.backend.ecommerce.exception;
 
 import com.backend.ecommerce.api.dto.ErrorMessage;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
@@ -69,6 +70,36 @@ public class CustomControllerAdvice {
     public ErrorMessage handleResourceNotFoundException(ResourceNotFoundException ex){
         return new ErrorMessage(
                 HttpStatus.NOT_FOUND.value(),
+                new Date(),
+                ex.getMessage()
+        );
+    }
+
+    @ExceptionHandler(UploadImageFailureException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ErrorMessage handleImageFailureException(UploadImageFailureException ex){
+        return new ErrorMessage(
+                HttpStatus.CONFLICT.value(),
+                new Date(),
+                ex.getMessage()
+        );
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorMessage dataIntegrityException(DataIntegrityViolationException ex){
+        return new ErrorMessage(
+                HttpStatus.BAD_REQUEST.value(),
+                new Date(),
+                ex.getMessage()
+        );
+    }
+
+    @ExceptionHandler(EmailNotFoundException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorMessage handleEmailNotFoundException(EmailNotFoundException ex){
+        return new ErrorMessage(
+                HttpStatus.BAD_REQUEST.value(),
                 new Date(),
                 ex.getMessage()
         );

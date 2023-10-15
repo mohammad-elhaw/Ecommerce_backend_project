@@ -4,7 +4,7 @@ import com.backend.ecommerce.event.ResetPasswordEvent;
 import com.backend.ecommerce.model.LocalUser;
 import com.backend.ecommerce.service.EmailService;
 import com.backend.ecommerce.service.JWTService;
-import com.backend.ecommerce.service.interfaces.IUserService;
+import com.backend.ecommerce.service.interfaces.IAuthUserService;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component;
 public class ResetPasswordEventListener implements ApplicationListener<ResetPasswordEvent> {
 
     private JWTService jwtService;
-    private IUserService userService;
+    private IAuthUserService userService;
     private EmailService emailService;
 
     @SneakyThrows

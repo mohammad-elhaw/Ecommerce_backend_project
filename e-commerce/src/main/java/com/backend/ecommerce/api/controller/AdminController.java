@@ -6,7 +6,7 @@ import com.backend.ecommerce.api.dto.ErrorMessage;
 import com.backend.ecommerce.exception.InvalidEmailOrPasswordException;
 import com.backend.ecommerce.exception.UserIsNotEnableException;
 import com.backend.ecommerce.service.interfaces.IAdminService;
-import com.backend.ecommerce.service.interfaces.IUserService;
+import com.backend.ecommerce.service.interfaces.IAuthUserService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -21,7 +21,7 @@ import java.util.Date;
 public class AdminController {
 
     private IAdminService adminService;
-    private IUserService userService;
+    private IAuthUserService userService;
 
 //    @PostMapping("/register")
 //    public ResponseEntity<LocalUser> createAdmin(@Valid @RequestBody RegisterRequest registerRequest){

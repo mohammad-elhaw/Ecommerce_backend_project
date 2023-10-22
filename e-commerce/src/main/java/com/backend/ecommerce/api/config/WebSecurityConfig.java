@@ -33,7 +33,7 @@ public class WebSecurityConfig {
         http.authorizeHttpRequests((auth)->auth
                         .requestMatchers("/contact", "/admin/login", "/auth/**", "/error", "/public/**").permitAll()
                         .requestMatchers( "/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/cart/**", "/user/**", "cart_items/**", "/orders/**", "/ratings/**")
+                        .requestMatchers("/user/**", "/ratings/**")
                         .hasAnyRole("USER", "ADMIN").anyRequest().authenticated())
                 .formLogin(Customizer.withDefaults())
                 .httpBasic(Customizer.withDefaults());

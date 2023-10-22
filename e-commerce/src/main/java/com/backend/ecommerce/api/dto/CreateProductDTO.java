@@ -28,6 +28,10 @@ public class CreateProductDTO {
     @NotNull(message = "you must insert the price")
     private Double price;
     private double discountPercent;
+    private int daysForDiscount;
+    private int hoursForDiscount;
+    private int minutesForDiscount;
+
 
     @NotNull(message = "you must insert the quantity.")
     private Integer quantity;

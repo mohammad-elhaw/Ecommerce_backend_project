@@ -38,8 +38,8 @@ public class LocalUser {
 
 
     @JsonIgnore
-    @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true)
-    private List<Address> addresses = new ArrayList<>();
+    @OneToOne(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private Address address;
 
     @JsonManagedReference
     @ManyToMany(cascade ={ CascadeType.REMOVE,

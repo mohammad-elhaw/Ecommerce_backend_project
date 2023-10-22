@@ -1,4 +1,4 @@
-package com.backend.ecommerce.imageUtil;
+package com.backend.ecommerce.util;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

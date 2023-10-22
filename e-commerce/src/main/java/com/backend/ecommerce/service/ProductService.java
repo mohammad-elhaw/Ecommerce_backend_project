@@ -11,6 +11,7 @@ import com.backend.ecommerce.model.Product;
 import com.backend.ecommerce.model.repository.CategoryRepo;
 import com.backend.ecommerce.model.repository.InventoryRepo;
 import com.backend.ecommerce.model.repository.ProductRepo;
+import com.backend.ecommerce.service.interfaces.IDiscountService;
 import com.backend.ecommerce.service.interfaces.IImageService;
 import com.backend.ecommerce.service.interfaces.IProductService;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +37,7 @@ public class ProductService implements IProductService {
     private final InventoryRepo inventoryRepo;
     private final ModelMapper mapper;
     private final IImageService imageService;
+    private final IDiscountService discountService;
 
     @SneakyThrows
     @Override
@@ -49,7 +51,7 @@ public class ProductService implements IProductService {
         List<Product> products = category.getProducts();
         for (Product value : products) {
             if (value.getProductName().equals(createProductDTO.getProductName())
-                    && value.getShortDescription().equals(createProductDTO.getShortDescription())) {
+                    || value.getShortDescription().equals(createProductDTO.getShortDescription())) {
                 isProductNotPresent = false;
                 break;
             }
@@ -58,22 +60,21 @@ public class ProductService implements IProductService {
             Product product = new Product();
             product.setProductName(createProductDTO.getProductName());
             product.setCategory(category);
-            product.setDiscountPercent(createProductDTO.getDiscountPercent());
-            if(createProductDTO.getDiscountPercent() > 0){
-                double discountPrice = createProductDTO.getPrice() - ((createProductDTO.getDiscountPercent() * 0.01) * createProductDTO.getPrice());
-                product.setDiscountPrice(discountPrice);
-            }
             product.setLongDescription(createProductDTO.getLongDescription());
             product.setShortDescription(createProductDTO.getShortDescription());
             product.setPrice(createProductDTO.getPrice());
             product = productRepo.save(product);
+            discountService.addDiscountForProduct(product, createProductDTO);
 
             Inventory inventory = new Inventory(createProductDTO.getQuantity(), product);
             inventoryRepo.save(inventory);
+
+
         }else{
             throw new APIException("Product already exists.");
         }
     }
+
 
     @Override
     @Transactional

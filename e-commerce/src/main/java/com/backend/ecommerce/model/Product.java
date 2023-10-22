@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "products")
+@Table(name = "products", indexes = @Index(name = "idx_discount_end_date", columnList = "discountEndDate"))
 @AllArgsConstructor
 @NoArgsConstructor
 @Setter
@@ -23,19 +23,14 @@ public class Product {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(nullable = false)
     private Long productId;
-
     private String productName;
-
     private String shortDescription;
-
     private String longDescription;
-
     private Double price;
-
     private double discountPercent;
-
+    private LocalDateTime discountStartDate;
+    private LocalDateTime discountEndDate;
     private double discountPrice;
-
     private String imageUrl;
 
     @ManyToOne(optional = false)
@@ -43,7 +38,7 @@ public class Product {
     private Category category;
 
     @JsonManagedReference
-    @OneToOne(mappedBy = "product", cascade = CascadeType.ALL, optional = false, orphanRemoval = true)
+    @OneToOne(mappedBy = "product", cascade = {CascadeType.MERGE, CascadeType.PERSIST}, optional = false)
     private Inventory inventory;
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)

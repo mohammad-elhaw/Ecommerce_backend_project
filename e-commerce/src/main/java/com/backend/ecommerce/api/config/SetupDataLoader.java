@@ -1,25 +1,32 @@
 package com.backend.ecommerce.api.config;
 
+import com.backend.ecommerce.event.DiscountEndEvent;
 import com.backend.ecommerce.model.LocalUser;
 import com.backend.ecommerce.model.Privilege;
+import com.backend.ecommerce.model.Product;
 import com.backend.ecommerce.model.Role;
 import com.backend.ecommerce.model.repository.PrivilegeRepo;
+import com.backend.ecommerce.model.repository.ProductRepo;
 import com.backend.ecommerce.model.repository.RoleRepo;
 import com.backend.ecommerce.model.repository.UserRepo;
 import com.backend.ecommerce.service.interfaces.ICartService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class SetupDataLoader implements ApplicationListener<ContextRefreshedEvent> {
 
     private final UserRepo userRepo;
@@ -27,6 +34,8 @@ public class SetupDataLoader implements ApplicationListener<ContextRefreshedEven
     private final PrivilegeRepo privilegeRepo;
     private final PasswordEncoder passwordEncoder;
     private final ICartService cartService;
+    private final ProductRepo productRepo;
+    private final ApplicationEventPublisher publisher;
 
     @Override
     @Transactional
@@ -56,6 +65,21 @@ public class SetupDataLoader implements ApplicationListener<ContextRefreshedEven
             userRepo.save(localUser);
             cartService.createCart(localUser);
         }
+        checkDiscountEndDateAndTriggerEvent();
+    }
+
+    private void checkDiscountEndDateAndTriggerEvent(){
+        log.info("checkDiscountEndDateAndTriggerEvent() method calls");
+        LocalDateTime currentDate = LocalDateTime.now();
+        List<Product> products = productRepo.findProductExceededDiscountEndDate(currentDate);
+        for(Product product : products){
+            triggerDiscountEvent(product);
+        }
+    }
+
+    private void triggerDiscountEvent(Product product) {
+        DiscountEndEvent event = new DiscountEndEvent(product);
+        CompletableFuture.runAsync(()->publisher.publishEvent(event));
     }
 
 
@@ -78,4 +102,5 @@ public class SetupDataLoader implements ApplicationListener<ContextRefreshedEven
             roleRepo.save(role);
         }
     }
+
 }

@@ -10,14 +10,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping
+@RequestMapping("/user")
 @RequiredArgsConstructor
 public class CartController {
 
     private final ICartService cartService;
     private final IUserService userService;
 
-    @PostMapping("/user/cart/product/{productId}/quantity/{quantity}")
+    @PostMapping("/cart/product/{productId}/quantity/{quantity}")
     public ResponseEntity<?> addProductToCart(@PathVariable Long productId,
                                               @PathVariable Integer quantity){
         LocalUser user = userService.getAuthenticatedUser();
@@ -25,21 +25,21 @@ public class CartController {
         return new ResponseEntity<>(cartDTO, HttpStatus.CREATED);
     }
 
-    @GetMapping("/user/cart")
+    @GetMapping("/cart")
     public ResponseEntity<?> getCartByUser(){
         LocalUser user = userService.getAuthenticatedUser();
         CartDTO cartDTO = cartService.getCart(user.getUserId());
         return new ResponseEntity<>(cartDTO, HttpStatus.FOUND);
     }
 
-    @PutMapping("/user/cart/product/{productId}/quantity/{quantity}")
+    @PutMapping("/cart/product/{productId}/quantity/{quantity}")
     public ResponseEntity<?> updateCartProduct(@PathVariable Long productId, @PathVariable Integer quantity){
         LocalUser user = userService.getAuthenticatedUser();
         CartDTO cartDTO = cartService.updateProductQuantityInCart(user, productId, quantity);
         return new ResponseEntity<>(cartDTO, HttpStatus.OK);
     }
 
-    @DeleteMapping("/user/cart/product/{productId}")
+    @DeleteMapping("/cart/product/{productId}")
     public ResponseEntity<?> deleteProductFromCart(@PathVariable Long productId){
         LocalUser user = userService.getAuthenticatedUser();
         cartService.deleteProductFromCart(user, productId);

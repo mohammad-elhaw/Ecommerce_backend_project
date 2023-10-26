@@ -21,7 +21,7 @@ public class Order {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long orderId;
     private double totalPrice;
 
     @Enumerated(EnumType.STRING)

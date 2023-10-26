@@ -1,9 +1,6 @@
 package com.backend.ecommerce.service;
 
-import com.backend.ecommerce.api.dto.CreateOrderDTO;
-import com.backend.ecommerce.api.dto.OrderItemDTO;
-import com.backend.ecommerce.api.dto.OrderResponseDTO;
-import com.backend.ecommerce.api.dto.ShippedAddressDTO;
+import com.backend.ecommerce.api.dto.*;
 import com.backend.ecommerce.domain.OrderStatus;
 import com.backend.ecommerce.exception.APIException;
 import com.backend.ecommerce.exception.ResourceNotFoundException;
@@ -17,6 +14,10 @@ import com.backend.ecommerce.service.interfaces.IOrderService;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -149,10 +150,28 @@ public class OrderService implements IOrderService {
         orderRepo.delete(order);
     }
 
+    @SneakyThrows
     @Override
-    public List<OrderResponseDTO> getAllOrders() {
-        List<Order> orders = orderRepo.findAll();
-        return createListOrdersResponseDTO(orders);
+    public PageOrderResponseDTO getAllOrders(Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
+        Sort sortByAndOrder = sortOrder.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending()
+                : Sort.by(sortBy).descending();
+        Pageable pageable = PageRequest.of(pageNumber, pageSize, sortByAndOrder);
+        Page<Order> pageOrders = orderRepo.findAll(pageable);
+        List<Order> orders = pageOrders.getContent();
+        List<OrderResponseDTO> orderResponseDTOS = createListOrdersResponseDTO(orders);
+        if(orderResponseDTOS.size() == 0){
+            throw new APIException("No orders placed yet by the users");
+        }
+        PageOrderResponseDTO response = new PageOrderResponseDTO();
+
+        response.setContent(orderResponseDTOS);
+        response.setPageNumber(pageOrders.getNumber());
+        response.setPageSize(pageOrders.getSize());
+        response.setTotalElements(pageOrders.getTotalElements());
+        response.setTotalPages(pageOrders.getTotalPages());
+        response.setLastPage(pageOrders.isLast());
+
+        return response;
     }
 
     @Override

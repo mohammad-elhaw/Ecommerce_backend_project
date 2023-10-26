@@ -13,13 +13,16 @@ import lombok.Setter;
 @NoArgsConstructor
 public class CreateOrderDTO {
 
-    @NotNull
-    @NotBlank
+    @NotNull(message = "address must be exist")
+    @NotBlank(message = "address must be exist")
     private String address;
-    @NotNull
-    @NotBlank
+    @NotNull(message = "city must be exist")
+    @NotBlank(message = "city must be exist")
     private String city;
-    @NotNull
-    @NotBlank
+    @NotNull(message = "country must be exist")
+    @NotBlank(message = "country must be exist")
     private String country;
+    @NotNull(message = "street name must be exist")
+    @NotBlank(message = "street name must be exist")
+    private String streetName;
 }

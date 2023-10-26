@@ -22,19 +22,20 @@ public class Order {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private LocalDateTime orderDate;
-    private LocalDateTime deliveryDate;
     private double totalPrice;
+
+    @Enumerated(EnumType.STRING)
     private OrderStatus orderStatus;
     private LocalDateTime createdAt;
+    private LocalDateTime deliveryDate;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
     private LocalUser user;
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "address_id")
-    private Address shippingAddress;
+    private ShippedAddress shippedAddress;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> orderItems = new ArrayList<>();

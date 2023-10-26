@@ -19,6 +19,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 
@@ -107,13 +108,15 @@ public class CartService implements ICartService {
         Cart cart = cartRepo.findByUser(user).get();
         CartItem cartItem = cartItemRepo.findCartItemByProductIdAndCartId(cart.getCartId(), productId)
                 .orElseThrow(()->new ResourceNotFoundException("Product", "productId", productId));
+
         if(cartItem.getDiscountPrice() > 0){
             cart.setTotalPrice(cart.getTotalPrice() - cartItem.getDiscountPrice() * cartItem.getQuantity());
         } else{
             cart.setTotalPrice(cart.getTotalPrice() - cartItem.getPrice() * cartItem.getQuantity());
         }
-        cartRepo.save(cart);
+        cart.getCartItems().remove(cartItem);
         cartItemRepo.delete(cartItem);
+        cartRepo.save(cart);
     }
 
     @Override

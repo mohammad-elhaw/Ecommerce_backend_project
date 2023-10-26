@@ -32,5 +32,4 @@ public class RegisterRequest {
     @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[#$@!%&*?])[A-Za-z\\d#$@!%&*?]{8,}$"
             , message = "Password must have minimum eight characters, at least one letter, one number and one special character:")
     private String password;
-
 }

@@ -1,5 +1,6 @@
 package com.backend.ecommerce.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -9,7 +10,7 @@ import lombok.*;
 @NoArgsConstructor
 @Setter
 @Getter
-public class Address {
+public class ShippedAddress {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -19,12 +20,16 @@ public class Address {
     @Column(name = "address", nullable = false, length = 512)
     private String address;
 
+    @Column(nullable = false)
+    private String streetName;
+
     @Column(name = "city", nullable = false)
     private String city;
 
     @Column(name = "country", nullable = false, length = 80)
     private String country;
 
+    @JsonIgnore
     @ManyToOne(optional = false)
     @JoinColumn(name = "user_id", nullable = false)
     private LocalUser user;

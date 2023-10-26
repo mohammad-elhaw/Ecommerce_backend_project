@@ -26,7 +26,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -92,20 +91,20 @@ public class AuthUserService implements IAuthUserService {
             throw new UserAlreadyExistsException("User Already Exists.");
         }
 
-
-
         Role userRole = roleRepo.findByRoleName("ROLE_USER");
         LocalUser user = new LocalUser();
         user.setFirstName(registerRequest.getFirstName());
         user.setLastName(registerRequest.getLastName());
         user.setEmail(registerRequest.getEmail());
         user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
-        user.setRoles(Arrays.asList(userRole));
+        user.getRoles().add(userRole);
         user.setCreatedAt(LocalDateTime.now());
         user.setPhoneNumber(registerRequest.getPhoneNumber());
 
         LocalUser savedUser =userRepo.save(user);
         cartService.createCart(savedUser);
+
+        userRepo.save(user);
 
         CompletableFuture.runAsync(()->publisher.publishEvent(new RegistrationCompleteEvent(savedUser, CLIENT_URL)));
         //publisher.publishEvent(new RegistrationCompleteEvent(savedUser, CLIENT_URL));

@@ -9,7 +9,7 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "review")
+@Table(name = "reviews")
 @AllArgsConstructor
 @NoArgsConstructor
 @Setter
@@ -29,7 +29,6 @@ public class Review {
     @ManyToOne
     @JoinColumn(name = "user_id")
     private LocalUser user;
-
     private LocalDateTime createdAt;
 
 }

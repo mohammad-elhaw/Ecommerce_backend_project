@@ -1,11 +1,19 @@
 package com.backend.ecommerce.model;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "rating")
+@Table(name = "ratings")
+@AllArgsConstructor
+@NoArgsConstructor
+@Setter
+@Getter
 public class Rating {
 
     @Id
@@ -19,9 +27,7 @@ public class Rating {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
-
-    private double rating;
-
+    private int rating;
     private LocalDateTime createdAt;
 
 }

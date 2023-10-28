@@ -31,9 +31,9 @@ public class WebSecurityConfig {
         http.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         http.authorizeHttpRequests((auth)->auth
-                        .requestMatchers("/contact", "/admin/login", "/auth/**", "/error", "/public/**").permitAll()
+                        .requestMatchers("/contact", "/admin/login", "/auth/**", "/public/**").permitAll()
                         .requestMatchers( "/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/user/**", "/ratings/**")
+                        .requestMatchers("/user/**")
                         .hasAnyRole("USER", "ADMIN").anyRequest().authenticated())
                 .formLogin(Customizer.withDefaults())
                 .httpBasic(Customizer.withDefaults());

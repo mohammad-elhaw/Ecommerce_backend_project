@@ -2,7 +2,6 @@ package com.backend.ecommerce.api.config;
 
 import com.backend.ecommerce.service.MyUserDetailsService;
 import lombok.AllArgsConstructor;
-import org.modelmapper.ModelMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationProvider;
